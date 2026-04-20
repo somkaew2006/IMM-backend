@@ -67,7 +67,7 @@ export class QuDetail {
   taxBase: number;
 
   @Column({ name: 'vat_amount', type: 'numeric', precision: 12, scale: 2, default: 0 })
-  vat_amount: number;
+  vatAmount: number;
 
   @Column({ name: 'line_total', type: 'numeric', precision: 12, scale: 2, default: 0 })
   lineTotal: number;
