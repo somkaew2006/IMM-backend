@@ -5,6 +5,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { BookingHead } from './entities/booking-head.entity';
 import { BookingDetail } from './entities/booking-detail.entity';
+import { SequenceService } from '../common/sequence.service';
 
 @Injectable()
 export class BookingService {
@@ -14,6 +15,7 @@ export class BookingService {
     @InjectRepository(BookingDetail)
     private bookingDetailRepository: Repository<BookingDetail>,
     private dataSource: DataSource,
+    private sequenceService: SequenceService,
   ) {}
 
   async create(createBookingDto: CreateBookingDto) {
@@ -24,6 +26,11 @@ export class BookingService {
 
     try {
       const { details, ...headData } = createBookingDto;
+
+      // Auto-generate bookingNo if not provided
+      if (!headData.bookingNo) {
+        headData.bookingNo = await this.sequenceService.generateNextNumber('BOOKING');
+      }
 
       // 1. Create Head
       const bookingHead = this.bookingHeadRepository.create(headData);

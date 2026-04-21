@@ -15,6 +15,9 @@ export class QuHead {
   @Column({ name: 'ref_booking_id', nullable: true })
   refBookingId: number;
 
+  @Column({ name: 'ref_booking_no', length: 50, nullable: true })
+  refBookingNo: string;
+
   @Column({ name: 'status', length: 20, default: 'Draft' })
   status: string;
 

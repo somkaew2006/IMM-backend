@@ -5,6 +5,7 @@ import { CreateQuDto } from './dto/create-qu.dto';
 import { UpdateQuDto } from './dto/update-qu.dto';
 import { QuHead } from './entities/qu-head.entity';
 import { QuDetail } from './entities/qu-detail.entity';
+import { SequenceService } from '../common/sequence.service';
 
 @Injectable()
 export class QuService {
@@ -14,7 +15,8 @@ export class QuService {
     @InjectRepository(QuDetail)
     private quDetailRepository: Repository<QuDetail>,
     private dataSource: DataSource,
-  ) {}
+    private sequenceService: SequenceService,
+  ) { }
 
   private calculateTotals(quHead: QuHead, details: QuDetail[]) {
     let totalItemBeforeDiscount = 0;
@@ -25,23 +27,23 @@ export class QuService {
       const qty = Number(detail.qty) || 0;
       const loa = Number(detail.loa) || 0;
       const unitPrice = Number(detail.unitPrice) || 0;
-      
+
       detail.totalBeforeDiscount = qty * loa * unitPrice;
-      
+
       const discValue = Number(detail.discountValue) || 0;
       if (detail.discountType === 'Percent') {
         detail.discountAmount = (detail.totalBeforeDiscount * discValue) / 100;
       } else {
         detail.discountAmount = discValue;
       }
-      
+
       detail.totalAfterDiscount = detail.totalBeforeDiscount - detail.discountAmount;
-      
+
       totalItemBeforeDiscount += detail.totalBeforeDiscount;
       totalItemDiscount += detail.discountAmount;
 
       // Temporary placeholders for allocated values (can be refined later)
-      detail.netRevenue = detail.totalAfterDiscount; 
+      detail.netRevenue = detail.totalAfterDiscount;
       detail.taxBase = detail.netRevenue;
       detail.vatAmount = (detail.taxBase * (Number(detail.vatPercent) || 0)) / 100;
       detail.lineTotal = detail.taxBase + detail.vatAmount;
@@ -60,15 +62,15 @@ export class QuService {
     }
 
     quHead.netAmount = quHead.totalItemAfterDiscount - quHead.finalDiscountAmount;
-    
+
     const scPercent = Number(quHead.serviceChargePercent) || 0;
     quHead.serviceCharge = (quHead.netAmount * scPercent) / 100;
-    
+
     quHead.vatableAmount = quHead.netAmount + quHead.serviceCharge;
-    
+
     const vatPercent = Number(quHead.vatPercent) || 0;
     quHead.vatAmount = (quHead.vatableAmount * vatPercent) / 100;
-    
+
     quHead.grandTotal = quHead.vatableAmount + quHead.vatAmount;
   }
 
@@ -79,6 +81,11 @@ export class QuService {
 
     try {
       const { details, ...headData } = createQuDto;
+
+      // Auto-generate quNo if not provided
+      if (!headData.quNo) {
+        headData.quNo = await this.sequenceService.generateNextNumber('QUOTATION');
+      }
 
       const quHead = this.quHeadRepository.create(headData);
       const detailEntities = details.map(d => this.quDetailRepository.create(d));
@@ -129,9 +136,9 @@ export class QuService {
     try {
       const { details, ...headData } = updateQuDto;
 
-      let quHead = await queryRunner.manager.findOne(QuHead, { 
+      let quHead = await queryRunner.manager.findOne(QuHead, {
         where: { quId: id },
-        relations: ['details'] 
+        relations: ['details']
       });
       if (!quHead) throw new NotFoundException(`Quotation #${id} not found`);
 
