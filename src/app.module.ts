@@ -16,6 +16,8 @@ import { CommonModule } from './common/common.module';
 import { MasterDocumentNumberModule } from './master-document-number/master-document-number.module';
 import { RvModule } from './rv/rv.module';
 import { MasterTenderModule } from './master-tender/master-tender.module';
+import { MasterSiteModule } from './master-site/master-site.module';
+import { BookingSiteRouteModule } from './booking-site-route/booking-site-route.module';
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { MasterTenderModule } from './master-tender/master-tender.module';
     MasterDocumentNumberModule,
     RvModule,
     MasterTenderModule,
+    MasterSiteModule,
+    BookingSiteRouteModule,
   ],
   controllers: [AppController],
   providers: [AppService],
